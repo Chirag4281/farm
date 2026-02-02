@@ -1,3 +1,4 @@
+# Updated requirements.txt (COMPATIBLE VERSIONS)
 streamlit==1.28.0
 google-generativeai==0.3.0
 pandas==2.1.0
@@ -5,4 +6,4 @@ matplotlib==3.8.0
 seaborn==0.12.2
 plotly==5.17.0
 requests==2.31.0
-numpy==1.24.0
+numpy==1.23.5  # Changed from 1.24.0 to 1.23.5
