@@ -302,35 +302,8 @@ model_tested = ""
 model_status = st.empty()
 
 # Only run if an API key is provided (either in sidebar or environment)
-if not api_key_input:
-    st.warning("⚠️ Please enter your Gemini API Key in the sidebar to begin.")
-else:
-    genai.configure(api_key=api_key_input)
-    
-    with st.spinner("🧠 AI is analyzing your farm data..."):
-        for model_name in AVAILABLE_MODELS:
-            try:
-                # Initialize the model
-                model = genai.GenerativeModel(model_name)
-                
-                # Generate content
-                actual_response = model.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=0.7,
-                        max_output_tokens=1000,
-                    )
-                )
-                
-                # Success! Store the response and model
-                selected_model = model_name
-                ai_response = actual_response.text
-                model_tested = f"✅ Powered by: `{model_name}`"
-                break  
-                
-            except Exception as model_error:
-                model_status.info(f"🔄 Scaling models... (skipped {model_name})")
-                continue 
+
+ 
 
 # ============================================
 # 📋 FALLBACK TO DEMO MODE
