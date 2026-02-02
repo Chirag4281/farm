@@ -287,8 +287,6 @@ ai_response = None
 model_tested = ""
 
 # Clear progress
-progress_bar.empty()
-status_text.empty()
 
 # Show model testing status
 model_status = st.empty()
