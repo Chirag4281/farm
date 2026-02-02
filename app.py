@@ -100,7 +100,7 @@ if st.button("🚀 GENERATE AI ADVICE"):
         try:
             genai.configure(api_key=current_key)
             # Prioritizing the latest 2.0 model
-            models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
+            models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-pro']
             
             success = False
             with st.spinner("🧠 Agronomist AI is calculating..."):
