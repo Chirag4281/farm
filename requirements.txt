@@ -1,6 +1,8 @@
-streamlit
-google-generativeai
-pandas
-matplotlib
-seaborn
-requests
+streamlit==1.28.0
+google-generativeai==0.3.0
+pandas==2.1.0
+matplotlib==3.8.0
+seaborn==0.12.2
+plotly==5.17.0
+requests==2.31.0
+numpy==1.24.0
