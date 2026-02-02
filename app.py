@@ -296,7 +296,7 @@ model_status.info("🔍 **Testing available AI models...**")
 for model_name in AVAILABLE_MODELS:
     try:
         model_status.info(f"🔄 Testing model: `{model_name}`...")
-        time.sleep(0.5)  # Brief pause for user visibility
+       # Brief pause for user visibility
         
         # Configure model
         model = genai.GenerativeModel(model_name)
@@ -323,7 +323,7 @@ for model_name in AVAILABLE_MODELS:
         model_tested = f"✅ Using: `{model_name}`"
         
         model_status.success(f"✅ **Model `{model_name}` works perfectly!**")
-        time.sleep(1)  # Show success message briefly
+        # Show success message briefly
         model_status.empty()
         break  # Exit loop after success
         
@@ -335,7 +335,7 @@ for model_name in AVAILABLE_MODELS:
 # If all models failed, use demo response
 if ai_response is None:
     model_status.error("⚠️ All AI models failed. Using demo response...")
-    time.sleep(1)
+    
     model_status.empty()
     
     # Create a smart demo response based on user input
