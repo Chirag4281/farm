@@ -185,17 +185,6 @@ st.markdown("""
         box-shadow: 0 10px 25px rgba(26, 71, 42, 0.3);
     }
     
-    /* Particle Effect */
-    .particle {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: rgba(255,255,255,0.5);
-        border-radius: 50%;
-        pointer-events: none;
-        opacity: 0;
-    }
-    
     /* Input Animation */
     .stTextInput > div > div > input {
         animation: inputFocus 0.5s ease-out;
@@ -270,6 +259,50 @@ st.markdown("""
             transform: scale(1);
         }
     }
+    
+    /* Enhanced Response Styling */
+    .response-section {
+        background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        border-left: 5px solid #2e7d32;
+        animation: slideInRight 0.8s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .response-bullet {
+        display: flex;
+        align-items: flex-start;
+        margin: 0.8rem 0;
+        padding-left: 0.5rem;
+    }
+    
+    .response-bullet::before {
+        content: "🌱";
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    .why-note {
+        background: rgba(46, 125, 50, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        margin: 0.3rem 0 0.3rem 1.5rem;
+        font-size: 0.9rem;
+        color: #1a472a;
+        border-left: 3px solid #4caf50;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -291,7 +324,7 @@ if "api_key" in st.secrets:
     
     generation_config = {
         "temperature": 0.2, 
-        "max_output_tokens": 400,
+        "max_output_tokens": 800,  # Increased for detailed responses
     }
     
     model = genai.GenerativeModel(
@@ -299,7 +332,7 @@ if "api_key" in st.secrets:
         generation_config=generation_config
     )
 else:
-    st.error("⚠️ API Key missing!")
+    st.error("⚠️ API Key missing! Please add GOOGLE_API_KEY to Streamlit Secrets.")
     st.stop()
 
 # --- 4. SIDEBAR WITH ANIMATIONS ---
@@ -440,6 +473,126 @@ if button_clicked:
     </div>
     """, unsafe_allow_html=True)
 
+# --- ENHANCED PROMPT ENGINEERING FUNCTION ---
+def get_enhanced_prompt(farmer_name, farmer_location, land_size, location, crop_stage, category, user_query):
+    """Generate enhanced prompt with Bihar-specific context"""
+    
+    return f"""
+# BIHAR AGRICULTURAL EXPERT ASSISTANT PROMPT
+## ROLE & CONTEXT:
+You are a certified agricultural consultant specializing in Bihar's unique farming conditions. You have 20+ years of experience helping small-scale farmers in Bihar improve yields while reducing costs and environmental impact.
+
+## USER PROFILE:
+- 👤 Farmer: {farmer_name}
+- 📍 Location: {farmer_location}
+- 🌱 Land Size: {land_size} hectares
+- 🏛️ District: {location}
+- 🌾 Crop Stage: {crop_stage}
+- 🎯 Concern Category: {category}
+
+## USER QUERY:
+"{user_query}"
+
+## RESPONSE REQUIREMENTS:
+### STRUCTURE (Follow exactly):
+1. **📍 Situation Analysis** (2-3 sentences summarizing the specific Bihar context)
+2. **🎯 Immediate Actions** (Next 24-48 hours, max 3 bullet points)
+3. **📅 Short-term Plan** (This week, max 3 bullet points)
+4. **🌱 Long-term Strategy** (This season, max 2 bullet points)
+5. **⚠️ Bihar-Specific Warnings** (What to avoid in {location} district)
+6. **💪 Motivational Tip** (Include a farming-related quote or encouragement)
+
+### FORMATTING RULES:
+- Use **bold** for section headers
+- Use • for bullet points (not dashes or numbers)
+- Each bullet: Action + "Why?" explanation in parentheses
+- Use simple Hindi-English mix if technical terms needed
+- Keep each bullet max 2 lines
+
+### CONTENT GUIDELINES:
+1. **LOCALIZE**: Reference specific conditions in {location} district
+2. **COST-EFFECTIVE**: Prioritize low-cost solutions under ₹500
+3. **PRACTICAL**: Recommend only tools/materials available in local markets
+4. **SCALABLE**: Solutions should work for {land_size} hectare farms
+5. **SUSTAINABLE**: Promote organic/local resources
+
+### SPECIAL CONSIDERATIONS FOR BIHAR:
+- Account for frequent power cuts
+- Consider flood-prone areas in {location} if applicable
+- Account for small land holdings (like {land_size} hectares)
+- Consider local labor availability
+- Remember common crops in {location}: rice, wheat, maize, pulses
+
+### CURRENT CONDITIONS (Assume unless specified):
+- Season: {'Kharif' if datetime.now().month in [6,7,8,9,10] else 'Rabi'}
+- Weather: {'Monsoon season' if datetime.now().month in [6,7,8,9] else 'Dry season'}
+
+## FINAL INSTRUCTION:
+Provide actionable, localized advice that {farmer_name} can implement immediately. Focus on practical solutions available in {location} district for a {land_size} hectare farm.
+"""
+
+# --- ENHANCED RESPONSE DISPLAY FUNCTION ---
+def display_enhanced_response(response_text):
+    """Display AI response with enhanced formatting"""
+    
+    # Animated result card
+    st.markdown('<div class="result-card">', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); 
+                padding: 2rem; border-radius: 20px; margin: 2rem 0;">
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+            <div style="background: #2e7d32; color: white; width: 50px; height: 50px; 
+                        border-radius: 50%; display: flex; align-items: center; 
+                        justify-content: center; margin-right: 1rem; font-size: 1.8rem;
+                        animation: bounce 2s infinite;">
+                💡
+            </div>
+            <h2 style="margin: 0; color: #1a472a; font-size: 1.8rem;">🌾 AI Farming Recommendations</h2>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Display response with enhanced formatting
+    st.markdown('<div class="response-section">', unsafe_allow_html=True)
+    
+    # Process and display the response
+    lines = response_text.split('\n')
+    current_section = ""
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Check for section headers
+        if line.startswith('**📍') or line.startswith('**🎯') or line.startswith('**📅') or line.startswith('**🌱') or line.startswith('**⚠️') or line.startswith('**💪'):
+            st.markdown(f"### {line.replace('**', '')}")
+            current_section = line
+        elif line.startswith('•'):
+            # Display bullet points with enhanced styling
+            bullet_content = line[1:].strip()
+            if '(' in bullet_content and ')' in bullet_content:
+                # Split action and why
+                parts = bullet_content.split('(')
+                if len(parts) > 1:
+                    action = parts[0].strip()
+                    why = '(' + parts[1].strip()
+                    st.markdown(f'<div class="response-bullet"><strong>{action}</strong></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="why-note">{why}</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<div class="response-bullet">{bullet_content}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="response-bullet">{bullet_content}</div>', unsafe_allow_html=True)
+        elif any(line.startswith(num) for num in ['1.', '2.', '3.', '4.', '5.']):
+            # Convert numbered lists to bullet points
+            bullet_content = line[2:].strip()
+            st.markdown(f'<div class="response-bullet">{bullet_content}</div>', unsafe_allow_html=True)
+        else:
+            # Regular text
+            st.markdown(line)
+    
+    st.markdown('</div></div>', unsafe_allow_html=True)
+
 # Process query when button is clicked
 if button_clicked and user_query:
     with st.spinner("🌱 Analyzing soil patterns & weather data..."):
@@ -456,6 +609,7 @@ if button_clicked and user_query:
                     🌾
                 </div>
                 <h3>Consulting Agricultural Database...</h3>
+                <p>Analyzing conditions in {location} district</p>
             </div>
             <style>
             @keyframes spin {
@@ -463,58 +617,35 @@ if button_clicked and user_query:
                 100% { transform: rotate(360deg); }
             }
             </style>
-            """, unsafe_allow_html=True)
+            """.format(location=location), unsafe_allow_html=True)
         
         time.sleep(1.5)
         
-        # Get AI response
-        full_prompt = f"""As an agricultural expert, provide farming advice for:
-                        Country: {country}
-                        Region: {region}
-                        Crop Stage: {crop_stage}
-                        Question: {query}
-                        
-                        Format response with:
-                        1. Top 3 crop recommendations
-                        2. Specific actionable steps
-                        3. Expected outcomes
-                        4. Risk mitigation"""
-        
         try:
-            response = model.generate_content(full_prompt)
+            # Get enhanced prompt
+            enhanced_prompt = get_enhanced_prompt(
+                farmer_name, farmer_location, land_size, 
+                location, crop_stage, category, user_query
+            )
+            
+            # Get AI response
+            response = model.generate_content(enhanced_prompt)
             
             # Clear loading and show results with animation
             result_placeholder.empty()
             
-            # Animated result card
-            st.markdown('<div class="result-card">', unsafe_allow_html=True)
-            st.markdown("""
-            <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); 
-                        padding: 2rem; border-radius: 20px; margin: 2rem 0;">
-                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-                    <div style="background: #2e7d32; color: white; width: 40px; height: 40px; 
-                                border-radius: 50%; display: flex; align-items: center; 
-                                justify-content: center; margin-right: 1rem; font-size: 1.5rem;">
-                        💡
-                    </div>
-                    <h2 style="margin: 0; color: #1a472a;">AI Recommendations</h2>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Display response
-            st.markdown(response.text)
-            
-            st.markdown("</div></div>", unsafe_allow_html=True)
+            # Display enhanced response
+            display_enhanced_response(response.text)
             
             # Additional animated tips
             st.markdown("---")
-            st.markdown("### 🌟 Pro Tips for You")
+            st.markdown("### 🌟 Additional Pro Tips")
             
             tips = [
-                {"icon": "⏰", "title": "Best Timing", "desc": "Water plants early morning"},
-                {"icon": "💰", "title": "Cost Saver", "desc": "Use organic compost from farm waste"},
-                {"icon": "🌧️", "title": "Weather Watch", "desc": "Check forecast before spraying"},
-                {"icon": "🐝", "title": "Natural Pest", "desc": "Attract beneficial insects with marigolds"},
+                {"icon": "⏰", "title": "Best Timing", "desc": "Water plants early morning", "color": "#2e7d32"},
+                {"icon": "💰", "title": "Cost Saver", "desc": "Use organic compost from farm waste", "color": "#4caf50"},
+                {"icon": "🌧️", "title": "Weather Watch", "desc": "Check forecast before spraying", "color": "#2196f3"},
+                {"icon": "🐝", "title": "Natural Pest", "desc": "Attract beneficial insects with marigolds", "color": "#ff9800"},
             ]
             
             cols = st.columns(4)
@@ -523,15 +654,20 @@ if button_clicked and user_query:
                     st.markdown(f"""
                     <div style="text-align: center; padding: 1rem; border-radius: 15px; 
                                 background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-                                animation: fadeIn 1s ease-out {0.2*idx}s both;">
+                                animation: fadeIn 1s ease-out {0.2*idx}s both;
+                                border-top: 4px solid {tip['color']};">
                         <div style="font-size: 2rem; margin-bottom: 0.5rem;">{tip['icon']}</div>
-                        <h4 style="margin: 0; color: #2e7d32;">{tip['title']}</h4>
+                        <h4 style="margin: 0; color: {tip['color']};">{tip['title']}</h4>
                         <p style="font-size: 0.9rem; color: #666;">{tip['desc']}</p>
                     </div>
                     """, unsafe_allow_html=True)
             
+            # Success message
+            st.success("✅ AI analysis completed! Implement these steps for better results.")
+            
         except Exception as e:
             st.error(f"❌ Error: {str(e)[:100]}...")
+            st.info("Please try again with a different question or check your internet connection.")
 
 # Footer with animations
 st.markdown("---")
@@ -540,7 +676,7 @@ footer_cols = st.columns(3)
 with footer_cols[0]:
     st.markdown("""
     <div style="text-align: center; animation: fadeIn 2s ease-out 1s both;">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌦️</div>
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; animation: bounce 2s infinite;">🌦️</div>
         <h4>Weather Advisory</h4>
         <p>Partly Cloudy • 28°C</p>
         <small>Perfect for fertilizer application</small>
@@ -550,7 +686,7 @@ with footer_cols[0]:
 with footer_cols[1]:
     st.markdown("""
     <div style="text-align: center; animation: fadeIn 2s ease-out 1.2s both;">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📞</div>
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; animation: bounce 2s infinite 0.5s;">📞</div>
         <h4>Support</h4>
         <p>1800-XXX-XXXX</p>
         <small>Available 24/7</small>
@@ -560,14 +696,14 @@ with footer_cols[1]:
 with footer_cols[2]:
     st.markdown("""
     <div style="text-align: center; animation: fadeIn 2s ease-out 1.4s both;">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; animation: bounce 2s infinite 1s;">📊</div>
         <h4>Success Rate</h4>
         <p>85% Better Yield</p>
         <small>Based on user feedback</small>
     </div>
     """, unsafe_allow_html=True)
 
-# Floating particles effect (simulated with emojis)
+# Floating particles effect
 st.markdown("""
 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             pointer-events: none; z-index: -1; opacity: 0.1;">
@@ -580,7 +716,7 @@ st.markdown("""
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Add JavaScript for particle effect
+# Add JavaScript for enhanced particle effect
 st.components.v1.html("""
 <script>
 // Create floating particles
@@ -600,15 +736,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(container);
     
     // Create particles
-    for(let i = 0; i < 20; i++) {
+    const colors = ['#2e7d32', '#4caf50', '#66bb6a', '#81c784'];
+    for(let i = 0; i < 25; i++) {
         const particle = document.createElement('div');
+        const size = 2 + Math.random() * 4;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
         particle.style.cssText = `
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: linear-gradient(45deg, #2e7d32, #4caf50);
+            width: ${size}px;
+            height: ${size}px;
+            background: ${color};
             border-radius: 50%;
-            opacity: 0.3;
+            opacity: 0.2;
+            filter: blur(0.5px);
         `;
         
         // Random position
@@ -616,11 +757,11 @@ document.addEventListener('DOMContentLoaded', function() {
         particle.style.top = Math.random() * 100 + '%';
         
         // Animation
-        const duration = 3 + Math.random() * 4;
+        const duration = 4 + Math.random() * 6;
+        const delay = Math.random() * 3;
         particle.style.animation = `
-            floatParticle ${duration}s ease-in-out infinite
+            floatParticle ${duration}s ease-in-out infinite ${delay}s
         `;
-        particle.style.animationDelay = Math.random() * 2 + 's';
         
         container.appendChild(particle);
     }
@@ -631,23 +772,23 @@ document.addEventListener('DOMContentLoaded', function() {
         @keyframes floatParticle {
             0%, 100% {
                 transform: translate(0, 0) rotate(0deg);
-                opacity: 0.2;
+                opacity: 0.1;
             }
             25% {
-                transform: translate(20px, -20px) rotate(90deg);
-                opacity: 0.4;
+                transform: translate(30px, -30px) rotate(90deg);
+                opacity: 0.3;
             }
             50% {
-                transform: translate(0, -40px) rotate(180deg);
-                opacity: 0.2;
+                transform: translate(0, -60px) rotate(180deg);
+                opacity: 0.1;
             }
             75% {
-                transform: translate(-20px, -20px) rotate(270deg);
-                opacity: 0.4;
+                transform: translate(-30px, -30px) rotate(270deg);
+                opacity: 0.3;
             }
         }
     `;
     document.head.appendChild(style);
 });
 </script>
-""")
+""", height=0)
