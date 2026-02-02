@@ -274,13 +274,20 @@ with tab3:
 # ============================================
 
 # List of available Gemini models to try
-AVAILABLE_MODELS = [
-    'gemini-pro',           # Most reliable, widely available
-    'models/gemini-pro',    # Full path version
-    'gemini-1.0-pro',       # Stable version 1.0
-    'gemini-1.5-pro',       # Try 1.5 if available
-    'gemini-1.5-pro-latest' # Latest 1.5 version
-]
+AVAILABLE_MODELS =[
+                ('gemini-pro', 'Standard Gemini Pro (Most Common)'),
+                ('gemini-1.0-pro', 'Gemini 1.0 Pro (Stable)'),
+                ('gemini-1.0-pro-001', 'Gemini 1.0 Pro-001'),
+                ('gemini-1.0-pro-latest', 'Gemini 1.0 Pro Latest'),
+                ('gemini-1.5-pro', 'Gemini 1.5 Pro'),
+                ('gemini-1.5-pro-001', 'Gemini 1.5 Pro-001'),
+                ('gemini-1.5-pro-latest', 'Gemini 1.5 Pro Latest'),
+                ('gemini-pro-vision', 'Gemini Pro Vision'),
+                ('models/gemini-pro', 'Full Path: models/gemini-pro'),
+                ('models/gemini-1.0-pro', 'Full Path: models/gemini-1.0-pro'),
+                ('models/gemini-1.5-pro', 'Full Path: models/gemini-1.5-pro'),
+                ('gemini-ultra', 'Gemini Ultra (If Available)'),
+            ]
 
 selected_model = None
 ai_response = None
