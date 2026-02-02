@@ -133,7 +133,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. SECURE API CONNECTION ---
-if "GOOGLE_API_KEY" in st.secrets:
+if "api_keyY" in st.secrets:
     api_key = st.secrets["api_key"]
     genai.configure(api_key=api_key)
     
