@@ -273,72 +273,70 @@ with tab3:
 # 🚀 SMART MODEL SELECTION & RESPONSE GENERATION
 # ============================================
 
-# List of available Gemini models to try
-AVAILABLE_MODELS =[
-                ('gemini-pro', 'Standard Gemini Pro (Most Common)'),
-                ('gemini-1.0-pro', 'Gemini 1.0 Pro (Stable)'),
-                ('gemini-1.0-pro-001', 'Gemini 1.0 Pro-001'),
-                ('gemini-1.0-pro-latest', 'Gemini 1.0 Pro Latest'),
-                ('gemini-1.5-pro', 'Gemini 1.5 Pro'),
-                ('gemini-1.5-pro-001', 'Gemini 1.5 Pro-001'),
-                ('gemini-1.5-pro-latest', 'Gemini 1.5 Pro Latest'),
-                ('gemini-pro-vision', 'Gemini Pro Vision'),
-                ('models/gemini-pro', 'Full Path: models/gemini-pro'),
-                ('models/gemini-1.0-pro', 'Full Path: models/gemini-1.0-pro'),
-                ('models/gemini-1.5-pro', 'Full Path: models/gemini-1.5-pro'),
-                ('gemini-ultra', 'Gemini Ultra (If Available)'),
-            ]
+# ============================================
+# 🚀 SMART MODEL SELECTION & RESPONSE GENERATION
+# ============================================
+
+# Define the prompt based on user inputs
+prompt = f"""
+As an expert agricultural AI, provide advice for a farmer in {country}, {region}.
+Current Crop Stage: {crop_stage}
+Soil Type: {soil_type}, Rainfall: {rainfall}mm, Temp: {temperature}°C, Budget: {budget}
+User Question: {query if query else "What are the best farming practices for this profile?"}
+Provide actionable steps, reasoning, and risks to avoid.
+"""
+
+# Prioritized list of modern Gemini models
+AVAILABLE_MODELS = [
+    'gemini-2.0-flash',        # Fastest & Latest
+    'gemini-1.5-flash',       # High efficiency
+    'gemini-1.5-pro',         # Most intelligent
+    'gemini-1.0-pro'          # Legacy stable
+]
 
 selected_model = None
 ai_response = None
 model_tested = ""
 
-# Clear progress
-
 # Show model testing status
 model_status = st.empty()
-model_status.info("🔍 **Testing available AI models...**")
 
-# Try each model until one works
-for model_name in AVAILABLE_MODELS:
-    try:
-        model_status.info(f"🔄 Testing model: `{model_name}`...")
-       # Brief pause for user visibility
-        
-        # Configure model
-        model = genai.GenerativeModel(model_name)
-        
-        # Test with a simple prompt first
-        test_prompt = f"Say 'FarmGenius AI is ready' in 3 words."
-        test_response = model.generate_content(test_prompt, request_options={"timeout": 10})
-        
-        # If test passes, try the actual prompt
-        actual_response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.7,
-                max_output_tokens=800,
-                top_p=0.8,
-                top_k=40
-            ),
-            request_options={"timeout": 30}
-        )
-        
-        # Success! Store the response and model
-        selected_model = model_name
-        ai_response = actual_response.text
-        model_tested = f"✅ Using: `{model_name}`"
-        
-        model_status.success(f"✅ **Model `{model_name}` works perfectly!**")
-        # Show success message briefly
-        model_status.empty()
-        break  # Exit loop after success
-        
-    except Exception as model_error:
-        model_status.warning(f"⚠️ Model `{model_name}` failed: {str(model_error)[:50]}...")
-          # Brief pause
-        continue  # Try next model
+# Only run if an API key is provided (either in sidebar or environment)
+if not api_key_input:
+    st.warning("⚠️ Please enter your Gemini API Key in the sidebar to begin.")
+else:
+    genai.configure(api_key=api_key_input)
+    
+    with st.spinner("🧠 AI is analyzing your farm data..."):
+        for model_name in AVAILABLE_MODELS:
+            try:
+                # Initialize the model
+                model = genai.GenerativeModel(model_name)
+                
+                # Generate content
+                actual_response = model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.7,
+                        max_output_tokens=1000,
+                    )
+                )
+                
+                # Success! Store the response and model
+                selected_model = model_name
+                ai_response = actual_response.text
+                model_tested = f"✅ Powered by: `{model_name}`"
+                break  
+                
+            except Exception as model_error:
+                model_status.info(f"🔄 Scaling models... (skipped {model_name})")
+                continue 
 
+# ============================================
+# 📋 FALLBACK TO DEMO MODE
+# ============================================
+if ai_response is None:
+    # ... (Your existing demo_responses dictionary logic stays here) ...
 # If all models failed, use demo response
 if ai_response is None:
     model_status.error("⚠️ All AI models failed. Using demo response...")
