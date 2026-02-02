@@ -329,7 +329,7 @@ for model_name in AVAILABLE_MODELS:
         
     except Exception as model_error:
         model_status.warning(f"⚠️ Model `{model_name}` failed: {str(model_error)[:50]}...")
-        time.sleep(0.3)  # Brief pause
+          # Brief pause
         continue  # Try next model
 
 # If all models failed, use demo response
