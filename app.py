@@ -336,6 +336,7 @@ else:
 # 📋 FALLBACK TO DEMO MODE
 # ============================================
 if ai_response is None:
+    pass
     # ... (Your existing demo_responses dictionary logic stays here) ...
 # If all models failed, use demo response
 if ai_response is None:
