@@ -87,50 +87,48 @@ with tab3:
         st.success(f"🌾 Total Potential: {area * expected_yield:.2f} tons")
 
 # ============================================
-# 🚀 AI LOGIC
-# ============================================
-# ============================================
-# 🚀 AI LOGIC (ENHANCED DEBUGGING)
+# 🚀 UPDATED AI LOGIC (STABLE VERSION)
 # ============================================
 st.markdown("---")
 if st.button("🚀 GENERATE AI ADVICE"):
     current_key = st.session_state.get('api_key', "")
     
     if not current_key:
-        st.error("❌ No API Key found. Enter it in the sidebar and click 'Save'.")
+        st.error("❌ API Key Missing.")
     else:
         try:
             genai.configure(api_key=current_key)
             
-            # Expanded model list to ensure connectivity
-            models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+            # Use stable aliases to avoid 404 errors
+            models_to_try = [
+                'gemini-1.5-flash',      # High daily limit (1500 RPD)
+                'gemini-2.0-flash',      # Latest (but lower free limit)
+                'gemini-1.5-pro'         # Powerful (very low free limit)
+            ]
             
             success = False
-            with st.spinner("🧠 Consulting Agricultural Models..."):
-                for m_name in models_to_try:
-                    try:
-                        model = genai.GenerativeModel(m_name)
-                        
-                        # Added a timeout to prevent infinite hanging
-                        response = model.generate_content(
-                            f"Region: {country}, {region}. Question: {query}",
-                            generation_config={"temperature": 0.7}
-                        )
-                        
-                        if response.text:
-                            st.markdown(f"### 🤖 AI Insight ({m_name})")
-                            st.success("Analysis Complete!")
-                            st.write(response.text)
-                            success = True
-                            break
-                    except Exception as internal_e:
-                        # This will show you the REAL error (e.g., 'API_KEY_INVALID')
-                        st.warning(f"Skipping {m_name}: {str(internal_e)}")
-                        continue
-                
-                if not success:
-                    st.error("❌ All models failed. Check your internet or API billing status.")
+            for m_name in models_to_try:
+                try:
+                    model = genai.GenerativeModel(m_name)
+                    response = model.generate_content(f"Advice for {country}: {query}")
                     
+                    st.success(f"✅ Success using {m_name}")
+                    st.write(response.text)
+                    success = True
+                    break
+                except Exception as e:
+                    error_msg = str(e)
+                    if "429" in error_msg:
+                        st.warning(f"⚠️ {m_name} quota exceeded for today.")
+                    elif "404" in error_msg:
+                        st.warning(f"⚠️ {m_name} not found or unsupported in this region.")
+                    else:
+                        st.error(f"❌ {m_name} failed: {error_msg}")
+                    continue
+            
+            if not success:
+                st.error("🛑 All available models have reached their Free Tier limits. Please try again tomorrow or enable billing in Google AI Studio.")
+                
         except Exception as e:
             st.error(f"❌ Configuration Error: {e}")
 # ============================================
