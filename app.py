@@ -100,10 +100,13 @@ if st.button("🚀 GENERATE AI ADVICE"):
             genai.configure(api_key=current_key)
             
             # Use stable aliases to avoid 404 errors
+            # ============================================
+# 🚀 2026 COMPLIANT MODEL SELECTION
+# ============================================
             models_to_try = [
-                'gemini-1.5-flash',      # High daily limit (1500 RPD)
-                'gemini-2.0-flash',      # Latest (but lower free limit)
-                'gemini-1.5-pro'         # Powerful (very low free limit)
+                'gemini-2.0-flash-lite',   # 🟢 Best for Free Tier (Highest RPD/limits)
+                'gemini-3-flash-preview',  # 🆕 Newest model (might have experimental quota)
+                'gemini-1.5-flash-latest', # 🔄 Use '-latest' suffix to avoid 404s
             ]
             
             success = False
