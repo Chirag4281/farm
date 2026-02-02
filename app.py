@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 import random
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # ============================================
 # 🎨 PAGE CONFIGURATION - Premium Design
@@ -244,27 +242,29 @@ with tab3:
             total_yield = area * expected_yield
             st.success(f"🌾 Estimated Total Yield: **{total_yield:.2f} tons**")
             
-            # Create a gauge chart
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = total_yield,
-                title = {'text': "Estimated Yield"},
-                gauge = {
-                    'axis': {'range': [None, area * 5]},
-                    'bar': {'color': "darkblue"},
-                    'steps': [
-                        {'range': [0, area * 2], 'color': "lightgray"},
-                        {'range': [area * 2, area * 4], 'color': "gray"},
-                        {'range': [area * 4, area * 5], 'color': "darkgray"}
-                    ],
-                    'threshold': {
-                        'line': {'color': "red", 'width': 4},
-                        'thickness': 0.75,
-                        'value': area * 4
-                    }
-                }
-            ))
-            st.plotly_chart(fig, use_container_width=True)
+            # Create a simple progress bar visualization instead of gauge
+            st.markdown("### 📊 Yield Progress")
+            
+            fig, ax = plt.subplots(figsize=(10, 2))
+            
+            # Create a progress bar using matplotlib
+            max_possible_yield = area * 5
+            progress_percentage = (total_yield / max_possible_yield) * 100
+            
+            # Create horizontal bar for progress
+            bars = ax.barh(['Yield Progress'], [progress_percentage], color='#27AE60')
+            ax.set_xlim(0, 100)
+            ax.set_xlabel('Percentage of Maximum Potential')
+            ax.text(progress_percentage/2, 0, f'{total_yield:.1f} tons ({progress_percentage:.1f}%)', 
+                   ha='center', va='center', color='white', fontweight='bold')
+            
+            # Add threshold lines
+            ax.axvline(x=40, color='red', linestyle='--', alpha=0.5, label='Low Yield')
+            ax.axvline(x=70, color='orange', linestyle='--', alpha=0.5, label='Medium Yield')
+            ax.axvline(x=90, color='green', linestyle='--', alpha=0.5, label='High Yield')
+            
+            ax.legend(loc='upper right')
+            st.pyplot(fig)
 
 # ============================================
 # 🚀 AI RESPONSE SECTION
@@ -290,7 +290,67 @@ if st.button("🚀 Generate Smart Farming Advice", use_container_width=True):
             status_text.text(f"Analyzing... {i+1}%")
         
         # Configure Gemini API (replace with your actual API key)
-        genai.configure(api_key=st.secrets["api_key"])
+        # IMPORTANT: Use your actual API key or Streamlit secrets
+        try:
+            # Try to get API key from Streamlit secrets
+            api_key = st.secrets["api_key"]
+        except:
+            # Fallback to a demo mode
+            st.warning("⚠️ Running in DEMO MODE. Add your Gemini API key in Streamlit secrets.")
+            # Display sample response instead
+            sample_response = """
+            ## 🌾 **FarmGenius AI Advice for Rajasthan in August**
+            
+            **1. 🌱 Pearl Millet (Bajra)**
+            - **✅ Actionable Step:** Sow pearl millet between August 1-15
+            - **💡 Reason:** Drought-resistant, requires only 300-400mm rainfall
+            - **📊 Impact:** Yield potential: 1.5-2 tons per acre
+            - **⚠️ Risk to Avoid:** Don't sow if heavy rains predicted next week
+            
+            **2. 🌿 Green Gram (Moong)**
+            - **✅ Actionable Step:** Plant short-duration varieties (60-70 days)
+            - **💡 Reason:** Fits perfectly in monsoon window, improves soil nitrogen
+            - **📊 Impact:** Can harvest before winter, 0.8-1.2 tons per acre
+            - **⚠️ Risk to Avoid:** Ensure proper drainage to prevent root rot
+            
+            **3. 🌻 Cluster Bean (Guar)**
+            - **✅ Actionable Step:** Sow with 30x15 cm spacing
+            - **💡 Reason:** Tolerates sandy soil, low water requirement
+            - **📊 Impact:** Good for soil conservation, 0.5-0.8 tons per acre
+            - **⚠️ Risk to Avoid:** Avoid waterlogging conditions
+            
+            **🌦️ Seasonal Tip:** August in Rajasthan has 70% chance of moderate rainfall. Consider rainwater harvesting.
+            """
+            
+            # Clear progress
+            progress_bar.empty()
+            status_text.empty()
+            
+            # Display sample response
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); 
+                        padding: 30px; 
+                        border-radius: 20px; 
+                        border-left: 8px solid #27AE60;
+                        margin: 30px 0;
+                        box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <h2 style="color: #2C3E50; border-bottom: 3px solid #3498db; padding-bottom: 10px;">🤖 FarmGenius AI Advice (DEMO MODE)</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(sample_response)
+            
+            # Add download option
+            st.download_button(
+                label="📥 Download Advice as PDF",
+                data=sample_response,
+                file_name=f"farmgenius_advice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain"
+            )
+            st.stop()
+        
+        # If API key is available, use real Gemini
+        genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-pro')
         
         # Create comprehensive prompt
@@ -353,7 +413,7 @@ if st.button("🚀 Generate Smart Farming Advice", use_container_width=True):
         )
 
 # ============================================
-# 📊 VISUALIZATION SECTION
+# 📊 VISUALIZATION SECTION (Matplotlib Only)
 # ============================================
 st.markdown("---")
 st.markdown("## 📊 Farming Insights Dashboard")
@@ -374,39 +434,72 @@ with col1:
     
     df = pd.DataFrame(crops_data)
     fig, ax = plt.subplots(figsize=(10, 6))
-    df.set_index('Month').plot(kind='bar', stacked=True, ax=ax, colormap='viridis')
-    ax.set_ylabel('Growth Stage')
-    ax.set_title('Crop Planting Calendar')
-    ax.legend(title='Crops', bbox_to_anchor=(1.05, 1))
+    
+    # Set width of bars
+    bar_width = 0.25
+    
+    # Set position of bars on X axis
+    r1 = range(len(df['Month']))
+    r2 = [x + bar_width for x in r1]
+    r3 = [x + bar_width for x in r2]
+    
+    # Create bars
+    ax.bar(r1, df['Wheat'], color='#FFA726', width=bar_width, edgecolor='white', label='Wheat')
+    ax.bar(r2, df['Rice'], color='#42A5F5', width=bar_width, edgecolor='white', label='Rice')
+    ax.bar(r3, df['Corn'], color='#66BB6A', width=bar_width, edgecolor='white', label='Corn')
+    
+    # Add labels and title
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Growth Stage (1=Growing)')
+    ax.set_title('Monthly Crop Planting Calendar')
+    ax.set_xticks([r + bar_width for r in range(len(df['Month']))])
+    ax.set_xticklabels(df['Month'])
+    ax.legend()
+    
+    # Add grid
+    ax.grid(True, alpha=0.3, linestyle='--')
+    
     st.pyplot(fig)
 
 with col2:
-    # Weather Impact Gauge
+    # Weather Impact Visualization
     st.markdown("### 🌤️ Weather Impact Score")
     
-    # Create interactive gauge
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number+delta",
-        value = 78,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Favorability Index", 'font': {'size': 24}},
-        delta = {'reference': 50, 'increasing': {'color': "green"}},
-        gauge = {
-            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': "darkgreen"},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
-            'steps': [
-                {'range': [0, 40], 'color': 'red'},
-                {'range': [40, 70], 'color': 'yellow'},
-                {'range': [70, 100], 'color': 'green'}],
-            'threshold': {
-                'line': {'color': "black", 'width': 4},
-                'thickness': 0.75,
-                'value': 90}}))
+    # Create a radial chart (simpler alternative to gauge)
+    fig, ax = plt.subplots(figsize=(8, 6), subplot_kw=dict(projection='polar'))
     
-    st.plotly_chart(fig, use_container_width=True)
+    # Data for the chart
+    categories = ['Rainfall', 'Temperature', 'Humidity', 'Sunshine', 'Wind']
+    values = [75, 85, 65, 90, 55]  # Example values
+    
+    # Number of categories
+    N = len(categories)
+    
+    # Create angles for each category
+    angles = [n / float(N) * 2 * 3.14159 for n in range(N)]
+    angles += angles[:1]  # Close the circle
+    
+    # Close the values list
+    values += values[:1]
+    
+    # Plot the data
+    ax.plot(angles, values, 'o-', linewidth=2, color='#3498db')
+    ax.fill(angles, values, alpha=0.25, color='#3498db')
+    
+    # Set labels for each category
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories, fontsize=10)
+    
+    # Set y-axis limits
+    ax.set_ylim(0, 100)
+    
+    # Add a title
+    ax.set_title('Weather Favorability Score: 78/100', size=14, y=1.1)
+    
+    # Add grid
+    ax.grid(True)
+    
+    st.pyplot(fig)
 
 # ============================================
 # 📝 FEEDBACK & VALIDATION SECTION
@@ -446,17 +539,20 @@ example_cols = st.columns(3)
 
 with example_cols[0]:
     if st.button("🌾 Best crops for Rajasthan\nin August", use_container_width=True):
-        st.session_state.query = "What are the best crops to grow in Rajasthan during August?"
+        query = "What are the best crops to grow in Rajasthan during August?"
+        st.session_state.query = query
         st.rerun()
 
 with example_cols[1]:
     if st.button("💧 Water-saving techniques\nfor Ghana", use_container_width=True):
-        st.session_state.query = "Suggest water-saving irrigation techniques for farms in Ghana"
+        query = "Suggest water-saving irrigation techniques for farms in Ghana"
+        st.session_state.query = query
         st.rerun()
 
 with example_cols[2]:
     if st.button("❄️ Winter farming in\nCanada", use_container_width=True):
-        st.session_state.query = "What crops can be grown during winter in Canadian greenhouses?"
+        query = "What crops can be grown during winter in Canadian greenhouses?"
+        st.session_state.query = query
         st.rerun()
 
 # ============================================
@@ -494,20 +590,27 @@ with st.sidebar:
     
     # API Settings
     with st.expander("🔧 API Configuration"):
-        api_key = st.text_input("Gemini API Key", type="password")
+        api_key_input = st.text_input("Gemini API Key", type="password", help="Enter your Gemini API key here")
         temperature = st.slider("AI Creativity", 0.0, 1.0, 0.7, 0.1)
         max_tokens = st.slider("Response Length", 100, 2000, 500, 50)
+        
+        if st.button("Save API Key"):
+            st.success("API key saved (for demo only - use Streamlit secrets in production)")
     
     # Theme Selection
     with st.expander("🎨 Theme Customization"):
         theme = st.selectbox("Choose Theme", ["Default", "Dark Mode", "Green Fields", "Sunset"])
         if theme == "Dark Mode":
             st.markdown("""<style>.main {background: #2c3e50; color: white;}</style>""", unsafe_allow_html=True)
+        elif theme == "Green Fields":
+            st.markdown("""<style>.main {background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);}</style>""", unsafe_allow_html=True)
     
     # Quick Actions
     st.markdown("### ⚡ Quick Actions")
     
     if st.button("🔄 Clear All", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
         st.rerun()
     
     if st.button("📚 View Examples", use_container_width=True):
@@ -542,3 +645,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Initialize session state for query
+if 'query' not in st.session_state:
+    st.session_state.query = ""
