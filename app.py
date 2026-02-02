@@ -269,149 +269,186 @@ with tab3:
 # ============================================
 # 🚀 AI RESPONSE SECTION
 # ============================================
-st.markdown("</div>", unsafe_allow_html=True)
+# ============================================
+# 🚀 SMART MODEL SELECTION & RESPONSE GENERATION
+# ============================================
 
-# Generate Advice Button with Animation
-if st.button("🚀 Generate Smart Farming Advice", use_container_width=True):
-    
-    if not query:
-        st.warning("⚠️ Please enter a farming query first!")
-        st.stop()
-    
-    # Show loading animation
-    with st.spinner("🧠 **FarmGenius AI is analyzing...**"):
+# List of available Gemini models to try
+AVAILABLE_MODELS = [
+    'gemini-pro',           # Most reliable, widely available
+    'models/gemini-pro',    # Full path version
+    'gemini-1.0-pro',       # Stable version 1.0
+    'gemini-1.5-pro',       # Try 1.5 if available
+    'gemini-1.5-pro-latest' # Latest 1.5 version
+]
+
+selected_model = None
+ai_response = None
+model_tested = ""
+
+# Clear progress
+progress_bar.empty()
+status_text.empty()
+
+# Show model testing status
+model_status = st.empty()
+model_status.info("🔍 **Testing available AI models...**")
+
+# Try each model until one works
+for model_name in AVAILABLE_MODELS:
+    try:
+        model_status.info(f"🔄 Testing model: `{model_name}`...")
+        time.sleep(0.5)  # Brief pause for user visibility
         
-        # Progress bar
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+        # Configure model
+        model = genai.GenerativeModel(model_name)
         
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            status_text.text(f"Analyzing... {i+1}%")
+        # Test with a simple prompt first
+        test_prompt = f"Say 'FarmGenius AI is ready' in 3 words."
+        test_response = model.generate_content(test_prompt, request_options={"timeout": 10})
         
-        # Configure Gemini API (replace with your actual API key)
-        # IMPORTANT: Use your actual API key or Streamlit secrets
-        try:
-            # Try to get API key from Streamlit secrets
-            api_key = st.secrets["api_key"]
-        except:
-            # Fallback to a demo mode
-            st.warning("⚠️ Running in DEMO MODE. Add your Gemini API key in Streamlit secrets.")
-            # Display sample response instead
-            sample_response = """
-            ## 🌾 **FarmGenius AI Advice for Rajasthan in August**
-            
-            **1. 🌱 Pearl Millet (Bajra)**
-            - **✅ Actionable Step:** Sow pearl millet between August 1-15
-            - **💡 Reason:** Drought-resistant, requires only 300-400mm rainfall
-            - **📊 Impact:** Yield potential: 1.5-2 tons per acre
-            - **⚠️ Risk to Avoid:** Don't sow if heavy rains predicted next week
-            
-            **2. 🌿 Green Gram (Moong)**
-            - **✅ Actionable Step:** Plant short-duration varieties (60-70 days)
-            - **💡 Reason:** Fits perfectly in monsoon window, improves soil nitrogen
-            - **📊 Impact:** Can harvest before winter, 0.8-1.2 tons per acre
-            - **⚠️ Risk to Avoid:** Ensure proper drainage to prevent root rot
-            
-            **3. 🌻 Cluster Bean (Guar)**
-            - **✅ Actionable Step:** Sow with 30x15 cm spacing
-            - **💡 Reason:** Tolerates sandy soil, low water requirement
-            - **📊 Impact:** Good for soil conservation, 0.5-0.8 tons per acre
-            - **⚠️ Risk to Avoid:** Avoid waterlogging conditions
-            
-            **🌦️ Seasonal Tip:** August in Rajasthan has 70% chance of moderate rainfall. Consider rainwater harvesting.
-            """
-            
-            # Clear progress
-            progress_bar.empty()
-            status_text.empty()
-            
-            # Display sample response
-            st.markdown("""
-            <div style="background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); 
-                        padding: 30px; 
-                        border-radius: 20px; 
-                        border-left: 8px solid #27AE60;
-                        margin: 30px 0;
-                        box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
-                <h2 style="color: #2C3E50; border-bottom: 3px solid #3498db; padding-bottom: 10px;">🤖 FarmGenius AI Advice (DEMO MODE)</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown(sample_response)
-            
-            # Add download option
-            st.download_button(
-                label="📥 Download Advice as PDF",
-                data=sample_response,
-                file_name=f"farmgenius_advice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain"
-            )
-            st.stop()
-        
-        # If API key is available, use real Gemini
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-pro')
-        
-        # Create comprehensive prompt
-        prompt = f"""
-        You are FarmGenius AI - a world-class agricultural expert specializing in {country}.
-        
-        **USER QUERY:**
-        Region: {region}
-        Crop Stage: {crop_stage}
-        Question: {query}
-        
-        **ADDITIONAL CONTEXT:**
-        Soil Type: {soil_type if 'soil_type' in locals() else 'Not specified'}
-        Rainfall: {rainfall if 'rainfall' in locals() else 'Not specified'} mm
-        Temperature: {temperature if 'temperature' in locals() else 'Not specified'}°C
-        
-        **REQUIREMENTS:**
-        1. Provide 3-5 specific recommendations
-        2. Each recommendation MUST include:
-           - ✅ Actionable step
-           - 💡 Reason/Benefit (explain "why")
-           - 📊 Estimated impact
-           - ⚠️ Potential risks to avoid
-        3. Format with clear headings and emojis
-        4. Include local best practices for {country}
-        5. Add seasonal considerations
-        6. Provide alternatives if applicable
-        
-        Make it practical, encouraging, and easy to understand!
-        """
-        
-        # Generate response
-        response = model.generate_content(prompt)
-        
-        # Clear progress
-        progress_bar.empty()
-        status_text.empty()
-        
-        # Display response in a beautiful card
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); 
-                    padding: 30px; 
-                    border-radius: 20px; 
-                    border-left: 8px solid #27AE60;
-                    margin: 30px 0;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
-            <h2 style="color: #2C3E50; border-bottom: 3px solid #3498db; padding-bottom: 10px;">🤖 FarmGenius AI Advice</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display formatted response
-        st.markdown(response.text)
-        
-        # Add download option
-        st.download_button(
-            label="📥 Download Advice as PDF",
-            data=response.text,
-            file_name=f"farmgenius_advice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-            mime="text/plain"
+        # If test passes, try the actual prompt
+        actual_response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=800,
+                top_p=0.8,
+                top_k=40
+            ),
+            request_options={"timeout": 30}
         )
+        
+        # Success! Store the response and model
+        selected_model = model_name
+        ai_response = actual_response.text
+        model_tested = f"✅ Using: `{model_name}`"
+        
+        model_status.success(f"✅ **Model `{model_name}` works perfectly!**")
+        time.sleep(1)  # Show success message briefly
+        model_status.empty()
+        break  # Exit loop after success
+        
+    except Exception as model_error:
+        model_status.warning(f"⚠️ Model `{model_name}` failed: {str(model_error)[:50]}...")
+        time.sleep(0.3)  # Brief pause
+        continue  # Try next model
 
+# If all models failed, use demo response
+if ai_response is None:
+    model_status.error("⚠️ All AI models failed. Using demo response...")
+    time.sleep(1)
+    model_status.empty()
+    
+    # Create a smart demo response based on user input
+    demo_responses = {
+        "India 🇮🇳": """
+        🌾 **FarmGenius AI Advice for {} (DEMO MODE)**
+
+        **1. 🌱 Pearl Millet (Bajra)**
+        - ✅ **Actionable Step:** Plant between August 1-15 with 45x15 cm spacing
+        - 💡 **Reason:** Drought-resistant, requires only 300-400mm rainfall
+        - 📊 **Impact:** Yield potential: 1.5-2 tons per acre
+        - ⚠️ **Risk to Avoid:** Ensure proper drainage to prevent waterlogging
+
+        **2. 🌿 Green Gram (Moong)**
+        - ✅ **Actionable Step:** Use short-duration varieties (60-70 days)
+        - 💡 **Reason:** Fits monsoon window, improves soil nitrogen
+        - 📊 **Impact:** Can harvest before winter, 0.8-1.2 tons per acre
+        - ⚠️ **Risk to Avoid:** Apply neem-based pesticides for pest control
+
+        **3. 🌻 Cluster Bean (Guar)**
+        - ✅ **Actionable Step:** Sow with 30x15 cm spacing
+        - 💡 **Reason:** Tolerates sandy soil, low water requirement
+        - 📊 **Impact:** Good for soil conservation, 0.5-0.8 tons per acre
+        - ⚠️ **Risk to Avoid:** Avoid planting in waterlogged areas
+
+        **🌦️ Seasonal Tip:** {} in August typically has moderate rainfall. Consider rainwater harvesting and organic mulching.
+        """,
+        
+        "Ghana 🇬🇭": """
+        🌾 **FarmGenius AI Advice for Ghana (DEMO MODE)**
+
+        **1. 🍌 Plantain Cultivation**
+        - ✅ **Actionable Step:** Plant suckers 3m x 3m apart
+        - 💡 **Reason:** Thrives in Ghana's tropical climate
+        - 📊 **Impact:** High yield, year-round production
+        - ⚠️ **Risk to Avoid:** Control banana weevil with pheromone traps
+
+        **2. 🥜 Groundnut (Peanut)**
+        - ✅ **Actionable Step:** Use certified seeds, plant at onset of rains
+        - 💡 **Reason:** Fixes nitrogen, improves soil fertility
+        - 📊 **Impact:** 1-1.5 tons per hectare
+        - ⚠️ **Risk to Avoid:** Rotate crops to prevent disease buildup
+
+        **3. 🍠 Cassava**
+        - ✅ **Actionable Step:** Plant cuttings 1m x 1m apart
+        - 💡 **Reason:** Drought-tolerant, staple food crop
+        - 📊 **Impact:** High carbohydrate yield
+        - ⚠️ **Risk to Avoid:** Control mosaic virus disease
+        """,
+        
+        "Canada 🇨🇦": """
+        🌾 **FarmGenius AI Advice for Canada (DEMO MODE)**
+
+        **1. 🌾 Spring Wheat**
+        - ✅ **Actionable Step:** Plant early spring, use winter-hardy varieties
+        - 💡 **Reason:** Adapted to Canadian climate, high market demand
+        - 📊 **Impact:** 2.5-3.5 tons per acre
+        - ⚠️ **Risk to Avoid:** Monitor for fusarium head blight
+
+        **2. 🥔 Potatoes**
+        - ✅ **Actionable Step:** Use certified seed potatoes, rotate crops
+        - 💡 **Reason:** High-value crop, good storage potential
+        - 📊 **Impact:** 15-20 tons per acre
+        - ⚠️ **Risk to Avoid:** Implement integrated pest management
+
+        **3. 🌿 Canola**
+        - ✅ **Actionable Step:** Plant early, use hybrid varieties
+        - 💡 **Reason:** Oilseed crop with high economic value
+        - 📊 **Impact:** 1.5-2 tons per acre
+        - ⚠️ **Risk to Avoid:** Control flea beetles early season
+        """
+    }
+    
+    # Select appropriate demo response
+    country_key = country.split(" ")[0]  # Get country name without flag
+    if country_key in demo_responses:
+        ai_response = demo_responses[country_key].format(region, region)
+    else:
+        ai_response = demo_responses["India 🇮🇳"].format(region, region)
+    
+    model_tested = "⚠️ DEMO MODE (AI models unavailable)"
+
+# ============================================
+# 📋 DISPLAY RESPONSE WITH MODEL INFO
+# ============================================
+
+# Show which model was used
+st.info(f"**{model_tested}**")
+
+# Display response in a beautiful card
+st.markdown(f"""
+<div style="background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); 
+            padding: 30px; 
+            border-radius: 20px; 
+            border-left: 8px solid #27AE60;
+            margin: 30px 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+    <h2 style="color: #2C3E50; border-bottom: 3px solid #3498db; padding-bottom: 10px;">🤖 FarmGenius AI Advice</h2>
+</div>
+""", unsafe_allow_html=True)
+
+# Display formatted response
+st.markdown(ai_response)
+
+# Add download option
+st.download_button(
+    label="📥 Download Advice as PDF",
+    data=ai_response,
+    file_name=f"farmgenius_advice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+    mime="text/plain"
+)
 # ============================================
 # 📊 VISUALIZATION SECTION (Matplotlib Only)
 # ============================================
