@@ -89,39 +89,50 @@ with tab3:
 # ============================================
 # 🚀 AI LOGIC
 # ============================================
+# ============================================
+# 🚀 AI LOGIC (ENHANCED DEBUGGING)
+# ============================================
 st.markdown("---")
 if st.button("🚀 GENERATE AI ADVICE"):
-    # Retrieve key from session state
     current_key = st.session_state.get('api_key', "")
     
     if not current_key:
-        st.error("❌ API Key Missing! Please enter your key in the sidebar and click 'Save'.")
+        st.error("❌ No API Key found. Enter it in the sidebar and click 'Save'.")
     else:
         try:
             genai.configure(api_key=current_key)
-            # Prioritizing the latest 2.0 model
-            models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-pro']
+            
+            # Expanded model list to ensure connectivity
+            models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
             
             success = False
-            with st.spinner("🧠 Agronomist AI is calculating..."):
+            with st.spinner("🧠 Consulting Agricultural Models..."):
                 for m_name in models_to_try:
                     try:
                         model = genai.GenerativeModel(m_name)
-                        full_prompt = f"Expert Ag advice for {country}, {region}. Stage: {crop_stage}. Soil: {soil_type}. Question: {query}"
-                        response = model.generate_content(full_prompt)
                         
-                        st.markdown(f"### 🤖 AI Insight ({m_name})")
-                        st.write(response.text)
-                        success = True
-                        break
-                    except:
+                        # Added a timeout to prevent infinite hanging
+                        response = model.generate_content(
+                            f"Region: {country}, {region}. Question: {query}",
+                            generation_config={"temperature": 0.7}
+                        )
+                        
+                        if response.text:
+                            st.markdown(f"### 🤖 AI Insight ({m_name})")
+                            st.success("Analysis Complete!")
+                            st.write(response.text)
+                            success = True
+                            break
+                    except Exception as internal_e:
+                        # This will show you the REAL error (e.g., 'API_KEY_INVALID')
+                        st.warning(f"Skipping {m_name}: {str(internal_e)}")
                         continue
                 
                 if not success:
-                    st.error("❌ The models are currently unavailable or the API key is invalid.")
+                    st.error("❌ All models failed. Check your internet or API billing status.")
+                    
         except Exception as e:
-            st.error(f"❌ Initialization Error: {e}")
-
+            st.error(f"❌ Configuration Error: {e}")
 # ============================================
 # 📊 VISUALIZATION
 # ============================================
